@@ -27,9 +27,22 @@
         const frame = document.getElementById("video-frame");
 
         socket.on("room-sync", (state) => {
-            if (state.playing) {
-                frame.src = `https://www.youtube.com/embed/${state.songId}?autoplay=1`;
+            console.log("Sync received:", state); // Check your console for this!
+            const status = document.getElementById("player-status");
+            const frame = document.getElementById("video-frame");
+
+            if (!state || !state.playing) {
+                if (status) status.innerText = "Sync Status: Paused";
+                return;
             }
+            
+            // Force the iframe to load the video
+            if (frame && state.songId) {
+                frame.src = `https://www.youtube.com/embed/${state.songId}?autoplay=1`;
+                console.log("Setting iframe src to:", frame.src);
+            }
+            
+            if (status) status.innerText = `Now Playing: "${state.songId}"`;
         });
 
         // Trigger initial state
