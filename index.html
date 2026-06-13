@@ -119,18 +119,18 @@
     <script>
         let backendURL;
         let socketOptions = {
-            transports: ['polling', 'websocket'], 
+            // Allows clean automatic shifting between connection methods
+            transports: ['polling', 'websocket'],
             upgrade: true
         };
 
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             backendURL = 'http://localhost:3000';
         } else if (window.location.hostname.includes('discordsays.com')) {
-            backendURL = window.location.origin + '/api';
-            socketOptions.path = '/api/socket.io';
+            // Point directly to your live Render server domain inside Discord to avoid proxy confusion
+            backendURL = 'https://mj-jukebox-backend.onrender.com';
         } else {
             backendURL = 'https://mj-jukebox-backend.onrender.com';
-            socketOptions.path = '/socket.io'; 
         }
 
         const socket = io(backendURL, socketOptions); 
@@ -250,7 +250,6 @@
             if (currentTrackId !== state.songId) {
                 currentTrackId = state.songId;
                 
-                // Directly changing iframe source completely sidesteps all external JS file loading!
                 const frame = document.getElementById("video-frame");
                 if (frame) {
                     frame.src = `https://www.youtube.com/embed/${trackInfo.ytId}?autoplay=1&start=${targetSeconds}`;
