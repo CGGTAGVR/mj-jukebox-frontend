@@ -118,21 +118,23 @@
 
     <script>
         let backendURL;
-        let socketOptions = {};
+        let socketOptions = {
+            transports: ['polling', 'websocket'],
+            upgrade: true
+        };
 
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             backendURL = 'http://localhost:3000';
         } else if (window.location.hostname.includes('discordsays.com')) {
-            // Obey Discord CSP: send traffic to discordsays.com/api
+            // Correct path for Discord's external proxy engine wrapper
             backendURL = window.location.origin + '/api';
             socketOptions.path = '/api/socket.io';
         } else {
-            // Web Browser view fallback
             backendURL = 'https://mj-jukebox-backend.onrender.com';
-            socketOptions.path = '/api/socket.io';
+            socketOptions.path = '/socket.io'; 
         }
 
-        const socket = io(backendURL, socketOptions); 
+        const socket = io(backendURL, socketOptions);
 
         let instanceId = "local-room"; 
         let currentTrackId = null;
