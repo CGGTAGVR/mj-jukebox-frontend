@@ -99,7 +99,13 @@ function buildUI() {
     }
 }
 
-buildUI();
+// FIXED: Prevents script from running prematurely if Discord loads DOM slower than the browser environment
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", buildUI);
+} else {
+    buildUI();
+}
+
 socket.emit("join-room", instanceId);
 
 socket.on("room-sync", (state) => {
