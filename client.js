@@ -7,6 +7,7 @@ const socket = io(backendURL);
 
 let instanceId = "local-room"; 
 let currentTrackId = null;
+let ytPlayer = null; // Holds the native YouTube API engine reference
 
 const localDiscography = {
     "Off the Wall (1979)": [
@@ -99,7 +100,21 @@ function buildUI() {
     }
 }
 
-// FIXED: Prevents script from running prematurely if Discord loads DOM slower than the browser environment
+// Injects YouTube Iframe Player script safely into Discord client
+const tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+const firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+// Automatically triggers when the YouTube API has loaded up inside Discord
+window.onYouTubeIframeAPIReady = function() {
+    ytPlayer = new YT.Player('video-frame', {
+        events: {
+            'onReady': () => { console.log("YouTube Player is ready inside Discord."); }
+        }
+    });
+};
+
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", buildUI);
 } else {
@@ -110,7 +125,6 @@ socket.emit("join-room", instanceId);
 
 socket.on("room-sync", (state) => {
     const status = document.getElementById("player-status");
-    const frame = document.getElementById("video-frame");
     
     if (!state || !state.playing) {
         if (status) status.innerText = "Sync Status: Paused";
@@ -118,13 +132,23 @@ socket.on("room-sync", (state) => {
     }
 
     const trackInfo = trackingMap[state.songId];
-    if (!trackInfo || !frame) return;
+    if (!trackInfo) return;
 
     const targetSeconds = Math.floor(state.progress / 1000);
 
     if (currentTrackId !== state.songId) {
         currentTrackId = state.songId;
-        frame.src = `https://www.youtube.com/embed/${trackInfo.ytId}?autoplay=1&start=${targetSeconds}`;
+        
+        // Direct, high-priority script execution telling YouTube to force playback bypass
+        if (ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
+            ytPlayer.loadVideoById({
+                videoId: trackInfo.ytId,
+                startSeconds: targetSeconds
+            });
+        } else {
+            const frame = document.getElementById("video-frame");
+            if (frame) frame.src = `https://www.youtube.com/embed/${trackInfo.ytId}?enablejsapi=1&autoplay=1&start=${targetSeconds}`;
+        }
     }
 
     if (status) status.innerText = `Now Playing: "${trackInfo.title}"`;
