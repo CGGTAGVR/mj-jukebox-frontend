@@ -18,32 +18,35 @@
     </div>
     
     <script>
-        // CRITICAL: We point to location.origin (discordsays.com) 
-        // Discord's Proxy mapping translates /api requests to your Render backend automatically.
         const socket = io(window.location.origin, {
             path: '/api/socket.io',
             transports: ['websocket']
         });
 
+        // Add the song catalog here so the code knows what to play!
+        const songs = {
+            "thriller": "sOnqjkJTMaA",
+            "beat-it": "oRdxUFDoQe0",
+            "bad": "dsUXAEzaC3Q"
+            // You can add more songs here in the format "id": "ytId"
+        };
+
         const frame = document.getElementById("video-frame");
 
         socket.on("room-sync", (state) => {
-            const frame = document.getElementById("video-frame");
             if (state && state.playing && state.songId) {
-                // Remove autoplay=1 and see if it loads at all manually
-                frame.src = `https://www.youtube.com/embed/${state.songId}?enablejsapi=1`;
-                console.log("Loading:", state.songId);
+                const ytId = songs[state.songId] || state.songId; // Use song list, or raw ID
+                frame.src = `https://www.youtube.com/embed/${ytId}?enablejsapi=1`;
+                console.log("Loading video ID:", ytId);
             }
         });
 
-        // Add this to ensure the button works
         document.getElementById("start-btn").onclick = () => {
             socket.emit("join-room", "local-room");
             document.getElementById("start-btn").style.display = "none";
+            // For testing, let's trigger a song immediately on click:
+            socket.emit("play-track", { instanceId: "local-room", songId: "thriller" });
         };
-
-        // Trigger initial state
-        socket.emit("join-room", "local-room");
     </script>
 </body>
 </html>
