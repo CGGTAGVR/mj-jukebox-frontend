@@ -127,11 +127,13 @@
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             backendURL = 'http://localhost:3000';
         } else if (window.location.hostname.includes('discordsays.com')) {
+            // Inside Discord: Use the safe endpoint prefix
             backendURL = window.location.origin + '/api';
             socketOptions.path = '/api/socket.io';
         } else {
+            // In a normal web browser: Connect directly to Render without the /api path prefix!
             backendURL = 'https://mj-jukebox-backend.onrender.com';
-            socketOptions.path = '/api/socket.io';
+            socketOptions.path = '/socket.io'; 
         }
 
         const socket = io(backendURL, socketOptions); 
