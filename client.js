@@ -1,9 +1,13 @@
 // Change the URL below to match your live Render web service address once deployed
+// This tells the app to use your local fallback for testing, or use Discord's safe encrypted tunnel when live
 const backendURL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? 'http://localhost:3000' 
-    : 'https://mj-jukebox-backend.onrender.com'; 
+    : window.location.origin + '/api'; // Crucial: Tunnels traffic through Discord's approved domain!
 
-const socket = io(backendURL); 
+// Change your socket initialization line to look exactly like this so the paths match:
+const socket = io(backendURL, {
+    path: '/api/socket.io'
+});
 
 let instanceId = "local-room"; 
 let currentTrackId = null;
