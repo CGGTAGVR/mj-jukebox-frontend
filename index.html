@@ -102,7 +102,6 @@
         }
     </style>
     <script src="./socket.io.min.js"></script>
-    <script src="./iframe_api.js"></script>
 </head>
 <body>
 
@@ -120,18 +119,16 @@
     <script>
         let backendURL;
         let socketOptions = {
-            transports: ['websocket'], // Bypasses proxy handshake 400 errors
-            upgrade: false
+            transports: ['polling', 'websocket'], 
+            upgrade: true
         };
 
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             backendURL = 'http://localhost:3000';
         } else if (window.location.hostname.includes('discordsays.com')) {
-            // Inside Discord: Use the safe endpoint prefix
             backendURL = window.location.origin + '/api';
             socketOptions.path = '/api/socket.io';
         } else {
-            // In a normal web browser: Connect directly to Render without the /api path prefix!
             backendURL = 'https://mj-jukebox-backend.onrender.com';
             socketOptions.path = '/socket.io'; 
         }
@@ -140,7 +137,6 @@
 
         let instanceId = "local-room"; 
         let currentTrackId = null;
-        let ytPlayer = null;
 
         const localDiscography = {
             "Off the Wall (1979)": [
@@ -233,14 +229,6 @@
             }
         }
 
-        window.onYouTubeIframeAPIReady = function() {
-            ytPlayer = new YT.Player('video-frame', {
-                events: {
-                    'onReady': () => { console.log("Player connected natively via local script."); }
-                }
-            });
-        };
-
         if (document.readyState === "loading") {
             document.addEventListener("DOMContentLoaded", buildUI);
         } else {
@@ -261,14 +249,11 @@
             const targetSeconds = Math.floor(state.progress / 1000);
             if (currentTrackId !== state.songId) {
                 currentTrackId = state.songId;
-                if (ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
-                    ytPlayer.loadVideoById({
-                        videoId: trackInfo.ytId,
-                        startSeconds: targetSeconds
-                    });
-                } else {
-                    const frame = document.getElementById("video-frame");
-                    if (frame) frame.src = `https://www.youtube.com/embed/${trackInfo.ytId}?enablejsapi=1&autoplay=1&start=${targetSeconds}`;
+                
+                // Directly changing iframe source completely sidesteps all external JS file loading!
+                const frame = document.getElementById("video-frame");
+                if (frame) {
+                    frame.src = `https://www.youtube.com/embed/${trackInfo.ytId}?autoplay=1&start=${targetSeconds}`;
                 }
             }
             if (status) status.innerText = `Now Playing: "${trackInfo.title}"`;
