@@ -118,19 +118,18 @@
 
     <script>
         let backendURL;
-        let socketOptions = {
-            // Allows clean automatic shifting between connection methods
-            transports: ['polling', 'websocket'],
-            upgrade: true
-        };
+        let socketOptions = {};
 
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             backendURL = 'http://localhost:3000';
         } else if (window.location.hostname.includes('discordsays.com')) {
-            // Point directly to your live Render server domain inside Discord to avoid proxy confusion
-            backendURL = 'https://mj-jukebox-backend.onrender.com';
+            // Obey Discord CSP: send traffic to discordsays.com/api
+            backendURL = window.location.origin + '/api';
+            socketOptions.path = '/api/socket.io';
         } else {
+            // Web Browser view fallback
             backendURL = 'https://mj-jukebox-backend.onrender.com';
+            socketOptions.path = '/api/socket.io';
         }
 
         const socket = io(backendURL, socketOptions); 
