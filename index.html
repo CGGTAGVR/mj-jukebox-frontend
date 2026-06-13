@@ -119,19 +119,14 @@
     <script>
         let backendURL;
         let socketOptions = {
-            transports: ['polling', 'websocket'],
-            upgrade: true
+            transports: ['websocket'], // Force direct websocket to maintain constant sync
         };
 
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             backendURL = 'http://localhost:3000';
-        } else if (window.location.hostname.includes('discordsays.com')) {
-            // Correct path for Discord's external proxy engine wrapper
-            backendURL = window.location.origin + '/api';
-            socketOptions.path = '/api/socket.io';
         } else {
+            // Pointing directly to Render. Discord Activity will bridge this automatically.
             backendURL = 'https://mj-jukebox-backend.onrender.com';
-            socketOptions.path = '/socket.io'; 
         }
 
         const socket = io(backendURL, socketOptions);
