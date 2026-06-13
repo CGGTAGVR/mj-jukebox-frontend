@@ -117,14 +117,21 @@
     <div id="player-status">Select a track to start streaming...</div>
 
     <script>
-        // Uses Discord's safe URL origin routing path
-        const backendURL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-            ? 'http://localhost:3000' 
-            : window.location.origin + '/api'; 
+        // SMART ROUTER: Auto-detects environment context to apply proper routes
+        let backendURL;
+        let socketOptions = {};
 
-        const socket = io(backendURL, {
-            path: '/api/socket.io' // Passes traffic smoothly through Discord firewall
-        }); 
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            backendURL = 'http://localhost:3000';
+        } else if (window.location.hostname.includes('discordsays.com')) {
+            backendURL = window.location.origin + '/api';
+            socketOptions.path = '/api/socket.io';
+        } else {
+            backendURL = 'https://mj-jukebox-backend.onrender.com';
+            socketOptions.path = '/api/socket.io';
+        }
+
+        const socket = io(backendURL, socketOptions); 
 
         let instanceId = "local-room"; 
         let currentTrackId = null;
@@ -221,7 +228,7 @@
             }
         }
 
-        // Bypasses auto-playback blocking inside Discord embedded webviews
+        // Setup native YouTube API framework
         const tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         const firstScriptTag = document.getElementsByTagName('script')[0];
@@ -230,7 +237,7 @@
         window.onYouTubeIframeAPIReady = function() {
             ytPlayer = new YT.Player('video-frame', {
                 events: {
-                    'onReady': () => { console.log("YouTube API Loaded."); }
+                    'onReady': () => { console.log("Player framework connected."); }
                 }
             });
         };
