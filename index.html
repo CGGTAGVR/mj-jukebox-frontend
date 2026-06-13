@@ -102,6 +102,7 @@
         }
     </style>
     <script src="./socket.io.min.js"></script>
+    <script src="./iframe_api.js"></script>
 </head>
 <body>
 
@@ -117,9 +118,11 @@
     <div id="player-status">Select a track to start streaming...</div>
 
     <script>
-        // SMART ROUTER: Auto-detects environment context to apply proper routes
         let backendURL;
-        let socketOptions = {};
+        let socketOptions = {
+            transports: ['websocket'], // Bypasses proxy handshake 400 errors
+            upgrade: false
+        };
 
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             backendURL = 'http://localhost:3000';
@@ -228,16 +231,10 @@
             }
         }
 
-        // Setup native YouTube API framework
-        const tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
         window.onYouTubeIframeAPIReady = function() {
             ytPlayer = new YT.Player('video-frame', {
                 events: {
-                    'onReady': () => { console.log("Player framework connected."); }
+                    'onReady': () => { console.log("Player connected natively via local script."); }
                 }
             });
         };
